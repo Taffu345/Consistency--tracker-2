@@ -3,120 +3,178 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Tracker with Countdown</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<title>Jap Tracker - Full Upgrade</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body {font-family:'Roboto',sans-serif;margin:0;padding:20px;
-  background:linear-gradient(-45deg,#ff9a9e,#fad0c4,#a1c4fd,#c2e9fb);
-  background-size:400% 400%;animation:gradientBG 15s ease infinite;color:#333;}
-@keyframes gradientBG{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-h2{text-align:center;color:#ff6b6b;font-size:2em;margin-bottom:20px;}
-.card{background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);border-radius:20px;padding:20px;margin-bottom:20px;box-shadow:0 8px 32px rgba(0,0,0,0.1);}
-label{font-weight:bold;}
-input[type="number"]{padding:10px;margin:5px 0 10px;width:100%;border-radius:12px;border:1px solid #ccc;transition:border-color 0.2s;}
-input[type="number"]:focus{border-color:#ff6b6b;outline:none;}
-button{padding:12px 25px;border:none;background:#ff6b6b;color:white;border-radius:12px;font-size:16px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;margin-top:5px;}
-button:hover{background:#ff4757;transform:scale(1.05);box-shadow:0 4px 15px rgba(0,0,0,0.2);}
-canvas{margin-top:20px;}
-#motivation{text-align:center;font-weight:bold;font-size:18px;margin-top:10px;}
-#streak{text-align:center;font-weight:bold;font-size:18px;margin-top:5px;color:#1dd1a1;}
-#analysis{text-align:center;font-size:18px;font-weight:bold;color:#ff9f43;margin-top:10px;}
-#timer{text-align:center;font-size:20px;font-weight:bold;color:#4834d4;margin-top:10px;}
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+  color: white;
+}
+.glass-card {
+  background: rgba(0,0,0,0.4);
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 15px;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+}
+h1 {
+  color: #ffeb3b;
+  text-shadow: 2px 2px 6px #000;
+}
+p, span {
+  font-size: 18px;
+  text-shadow: 1px 1px 3px #000;
+}
+button {
+  padding: 12px 25px;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  background: #4834d4; 
+  color: white; 
+  cursor: pointer; 
+  margin: 5px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+}
+button:hover {background:#341f97;}
+canvas {
+  margin-top: 20px; 
+  background: rgba(0,0,0,0.5); 
+  border-radius: 12px; 
+  padding: 10px;
+}
+a {
+  display: block; 
+  margin-top: 20px; 
+  color: #ffeb3b; 
+  text-decoration: none; 
+  font-weight: bold;
+  text-shadow: 1px 1px 3px #000;
+}
+#progressContainer {
+  width: 100%;
+  background: rgba(255,255,255,0.3);
+  border-radius: 12px;
+  margin: 10px 0;
+  height: 25px;
+}
+#progressBar {
+  width: 0%;
+  height: 100%;
+  background: #ffeb3b;
+  border-radius: 12px;
+  text-align: center;
+  line-height: 25px;
+  color: black;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
 
-<h2>📊 My Consistency Tracker</h2>
+<div class="glass-card">
+<h1>Jap Tracker 🙏</h1>
+<p id="countDisplay">Times japa today: 0</p>
+<button onclick="increment()">+1</button>
+<button onclick="resetToday()">Reset Today</button>
 
-<div class="card">
-  <label for="wake">Wake-up Time (hours):</label>
-  <input type="number" id="wake" min="0" max="24">
-  <label for="study">Study Hours:</label>
-  <input type="number" id="study" min="0" max="24">
-  <button onclick="addData()">Add Entry</button>
-  <button onclick="resetStreak()">Reset Streak</button>
-  <button onclick="downloadData()">Download CSV</button>
-  <p id="streak">Current Streak: 0 days</p>
-  <p id="analysis">Trend: N/A</p>
-  <p id="timer">Time left: --:--:--</p>
+<div id="progressContainer">
+  <div id="progressBar">0%</div>
 </div>
 
-<div class="card">
-  <canvas id="progressChart"></canvas>
+<p id="motivation">Let's start chanting!</p>
+<a href="index.html">Go back to main page</a>
 </div>
 
-<div class="card">
-  <p id="motivation">Stay consistent! 💪</p>
-</div>
+<canvas id="japChart"></canvas>
 
 <script>
-const ctx=document.getElementById('progressChart').getContext('2d');
-let labels=[],wakeData=[],studyData=[],streak=0;
+// Settings
+const dailyGoal = 108; // Daily Jap goal
 
-const motivationalQuotes=["Keep going, you are doing great! 💪","Consistency is key! 🔑","Small steps every day = big results 🌟"];
-const praiseMessages=["Amazing! You improved today! 🎉","Excellent work! Keep it up! 🏆"];
-const encourageMessages=["Don't worry, tomorrow is a new day! 🌱","Keep pushing! You can do it! 💪"];
+// Initialize or get data from localStorage
+let data = JSON.parse(localStorage.getItem('japData')) || {};
+const today = new Date().toLocaleDateString();
+if(!data[today]) data[today] = 0;
+let count = data[today];
 
-const chart=new Chart(ctx,{
-  type:'line',
-  data:{labels:labels,datasets:[
-    {label:'Wake-up Time',data:wakeData,borderColor:'#ff6b6b',tension:0.4,fill:false,pointRadius:5},
-    {label:'Study Hours',data:studyData,borderColor:'#1dd1a1',tension:0.4,fill:false,pointRadius:5}
-  ]},
-  options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,max:24}}}
+const countDisplay = document.getElementById('countDisplay');
+const motivation = document.getElementById('motivation');
+const progressBar = document.getElementById('progressBar');
+
+function updateDisplay(){
+  countDisplay.textContent = "Times japa today: " + count;
+  const percent = Math.min(100, Math.floor((count/dailyGoal)*100));
+  progressBar.style.width = percent + "%";
+  progressBar.textContent = percent + "%";
+
+  if(percent >= 100) motivation.textContent = "Awesome! Goal achieved 🙏";
+  else if(percent >= 50) motivation.textContent = "Great job! Keep going 💪";
+  else if(count > 0) motivation.textContent = "Good start! Keep chanting 🔥";
+  else motivation.textContent = "Let's start chanting!";
+}
+
+updateDisplay();
+
+// Chart setup
+const ctx = document.getElementById('japChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: Object.keys(data),
+    datasets: [{
+      label: 'Times japa',
+      data: Object.values(data),
+      backgroundColor: '#ffeb3b'
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: { y: { beginAtZero: true } }
+  }
 });
 
-// Countdown Timer
-const targetDate = new Date("May 3, 2025 17:00:00").getTime(); // 3 May 5:00 PM
-function updateTimer(){
-  const now=new Date().getTime();
-  let distance=targetDate-now;
-  if(distance<=0){
-    document.getElementById('timer').textContent="⏰ Time is up! Great effort! 🎯";
-    document.getElementById('motivation').textContent="🎉 You did it! Celebrate your progress!";
-    clearInterval(timerInterval);
-    return;
-  }
-  let hours=Math.floor((distance%(1000*60*60*24))/(1000*60*60));
-  let minutes=Math.floor((distance%(1000*60*60))/(1000*60));
-  let seconds=Math.floor((distance%(1000*60))/1000);
-  document.getElementById('timer').textContent=`Time left: ${hours}h ${minutes}m ${seconds}s`;
-}
-const timerInterval=setInterval(updateTimer,1000);
-
-function addData(){
-  const wake=document.getElementById('wake').value;
-  const study=document.getElementById('study').value;
-  const today=new Date().toLocaleDateString();
-  if(wake && study){
-    labels.push(today); wakeData.push(Number(wake)); studyData.push(Number(study));
-    chart.update(); document.getElementById('wake').value=''; document.getElementById('study').value='';
-    streak++; document.getElementById('streak').textContent="Current Streak: "+streak+" days";
-
-    // Trend Analysis & Motivation
-    let trendMsg="Trend: N/A"; let motivationMsg="Stay consistent! 💪";
-    if(studyData.length>=2){
-      const diff=studyData[studyData.length-1]-studyData[studyData.length-2];
-      if(diff>0){trendMsg="Trend: Upward 📈"; motivationMsg=praiseMessages[Math.floor(Math.random()*praiseMessages.length)];}
-      else if(diff<0){trendMsg="Trend: Downward 📉"; motivationMsg=encourageMessages[Math.floor(Math.random()*encourageMessages.length)];}
-      else{trendMsg="Trend: Same ➡️"; motivationMsg=motivationalQuotes[Math.floor(Math.random()*motivationalQuotes.length)];}
-    }
-
-    // Extra motivation if time <2 hours
-    const now=new Date().getTime(); let remaining=(targetDate-now)/(1000*60*60);
-    if(remaining<=2 && remaining>0){motivationMsg="⏰ Only "+Math.ceil(remaining)+" hours left! Give your best! 💪";}
-    
-    document.getElementById('analysis').textContent=trendMsg;
-    document.getElementById('motivation').textContent=motivationMsg;
-  }else{alert("Please enter both values!");}
+// Increment count
+function increment(){
+  count++;
+  data[today] = count;
+  localStorage.setItem('japData', JSON.stringify(data));
+  updateDisplay();
+  updateChart();
 }
 
-function resetStreak(){streak=0;document.getElementById('streak').textContent="Current Streak: 0 days";document.getElementById('motivation').textContent="Streak reset! Start fresh 💪";document.getElementById('analysis').textContent="Trend: N/A";}
+// Reset today's count
+function resetToday(){
+  count = 0;
+  data[today] = 0;
+  localStorage.setItem('japData', JSON.stringify(data));
+  updateDisplay();
+  updateChart();
+}
 
-function downloadData(){if(labels.length===0){alert("No data to download!"); return;}
-let csv="Date,Wake-up Hours,Study Hours\n";for(let i=0;i<labels.length;i++){csv+=labels[i]+","+wakeData[i]+","+studyData[i]+"\n";}
-const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download="consistency_data.csv"; a.click(); URL.revokeObjectURL(url);}
+// Update chart
+function updateChart(){
+  chart.data.labels = Object.keys(data);
+  chart.data.datasets[0].data = Object.values(data);
+  chart.update();
+}
+
+// Streak tracking (optional simple version)
+let streak = JSON.parse(localStorage.getItem('japStreak')) || 0;
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+const yesterdayStr = yesterday.toLocaleDateString();
+
+if(data[yesterdayStr] >= dailyGoal && data[today] === 0) streak++;
+else if(data[yesterdayStr] < dailyGoal && data[today] === 0) streak = 0;
+
+localStorage.setItem('japStreak', streak);
 </script>
 
 </body>
